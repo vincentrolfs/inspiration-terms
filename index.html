@@ -79,6 +79,7 @@
     const terms = (params.get("terms") || "inspiration,terms").split(",");
     const delayLow = (parseInt(params.get("delayLow")) || 10);
     const delayHigh = (parseInt(params.get("delayHigh")) || delayLow);
+    const fadeWindow = (parseFloat(params.get("fadeWindow")) || 0.1);
     const fadeColors = null === params.get("noFade");
     const useNormalDistribution = null !== params.get("useNormalDistribution");
 </script>
@@ -110,9 +111,7 @@
 
             document.getElementById('word').innerText = terms[this.currentIndex];
 
-            if (!fadeColors) {
-                this.applyColors();
-            }
+            this.applyInstantColors();
         }
 
         computeNewIndex() {
@@ -125,7 +124,6 @@
             return newIndex;
         }
 
-
         computeNewDelay() {
             if (!useNormalDistribution){
                 return 1000 * Math.abs(randomFloat(delayLow, delayHigh))
@@ -137,9 +135,33 @@
             return Math.abs(stdDv * normalDistribution() + mean)
         }
 
-        applyColors() {
-            const effectiveColor = fadeColors ? this.currentColor.interpolate(this.nextColor, this.timeSinceChange / this.currentDelay) : this.nextColor
 
+        applyFadingColors() {
+            if (!fadeColors) {
+                return;
+            }
+
+            if (this.timeSinceChange < (1 - fadeWindow) * this.currentDelay) {
+                return this.applyColors(this.currentColor)
+            }
+
+            const fadeTimeSoFar = this.timeSinceChange - (1 - fadeWindow) * this.currentDelay;
+            const fadeTimeTotal = fadeWindow * this.currentDelay;
+
+            this.applyColors(
+                this.currentColor.interpolate(this.nextColor, fadeTimeSoFar / fadeTimeTotal)
+            )
+        }
+
+        applyInstantColors() {
+            if (fadeColors) {
+                return;
+            }
+
+            this.applyColors(this.nextColor)
+        }
+
+        applyColors(effectiveColor) {
             document.getElementById('main').style.backgroundColor = effectiveColor.toString();
             document.getElementById('word').style.color = effectiveColor.textColor().toString();
         }
@@ -150,9 +172,7 @@
             setInterval(() => {
                 this.timeSinceChange += UPDATE_RATE;
 
-                if (fadeColors) {
-                    this.applyColors();
-                }
+                this.applyFadingColors();
 
                 if (this.timeSinceChange >= this.currentDelay) {
                     this.performChange();
