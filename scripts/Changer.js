@@ -1,33 +1,36 @@
 class Changer {
-  lastIndices = [];
-  currentIndex;
-  currentDelay;
-  timeSinceChange;
+  lastWordIndices = [];
+  currentWordIndex;
+  currentWordTime;
+  timeSinceWordChange;
   currentColor;
   nextColor;
+  currentPos;
+  nextPos;
 
-  performChange() {
-    const newIndex = this.computeNewIndex();
-    const newDelay = this.computeNewDelay();
+  performWordChange() {
+    const newWordIndex = this.computenewWordIndex();
+    const newWordTime = this.computenewWordTime();
     const newColor = new Rgb();
 
-    this.applyChange(newIndex, newDelay, newColor);
+    this.applyChange(newWordIndex, newWordTime, newColor);
   }
 
-  applyChange(newIndex, newDelay, newColor) {
-    this.currentIndex = newIndex;
-    this.currentDelay = newDelay;
-    this.timeSinceChange = 0;
+  applyChange(newWordIndex, newWordTime, newColor) {
+    this.currentWordIndex = newWordIndex;
+    this.currentWordTime = newWordTime;
+    this.timeSinceWordChange = 0;
+
     this.currentColor = this.nextColor || new Rgb();
     this.nextColor = newColor;
 
-    this.lastIndices.push(newIndex);
+    this.lastWordIndices.push(newWordIndex);
 
-    if (this.lastIndices.length > avoidTerms) {
-      this.lastIndices.shift();
+    if (this.lastWordIndices.length > avoidTerms) {
+      this.lastWordIndices.shift();
     }
 
-    document.getElementById("word").innerText = terms[this.currentIndex];
+    document.getElementById("word").innerText = terms[this.currentWordIndex];
     document.body.style.color = this.currentColor.textColor().toString();
 
     console.log({
@@ -37,22 +40,20 @@ class Changer {
     });
   }
 
-  computeNewIndex() {
-    let newIndex;
-
-    console.log("avoid", this.lastIndices);
+  computenewWordIndex() {
+    let newWordIndex;
 
     do {
-      newIndex = randomInt(0, terms.length);
+      newWordIndex = randomInt(0, terms.length);
     } while (
-      this.lastIndices.indexOf(newIndex) !== -1 &&
-      terms.length > this.lastIndices.length
+      this.lastWordIndices.indexOf(newWordIndex) !== -1 &&
+      terms.length > this.lastWordIndices.length
     );
 
-    return newIndex;
+    return newWordIndex;
   }
 
-  computeNewDelay() {
+  computenewWordTime() {
     if (!useNormalDistribution) {
       return 1000 * Math.abs(randomFloat(delayLow, delayHigh));
     }
@@ -64,13 +65,13 @@ class Changer {
   }
 
   applyFadingColors() {
-    if (this.timeSinceChange < (1 - fadeWindow) * this.currentDelay) {
+    if (this.timeSinceWordChange < (1 - fadeWindow) * this.currentWordTime) {
       return this.applyColor(this.currentColor);
     }
 
     const fadeTimeSoFar =
-      this.timeSinceChange - (1 - fadeWindow) * this.currentDelay;
-    const fadeTimeTotal = fadeWindow * this.currentDelay;
+      this.timeSinceWordChange - (1 - fadeWindow) * this.currentWordTime;
+    const fadeTimeTotal = fadeWindow * this.currentWordTime;
     const effectiveColor = this.currentColor.interpolate(
       this.nextColor,
       fadeTimeSoFar / fadeTimeTotal
@@ -84,15 +85,15 @@ class Changer {
   }
 
   run() {
-    this.performChange();
+    this.performWordChange();
 
     setInterval(() => {
-      this.timeSinceChange += UPDATE_RATE;
+      this.timeSinceWordChange += UPDATE_RATE;
 
       this.applyFadingColors();
 
-      if (this.timeSinceChange >= this.currentDelay) {
-        this.performChange();
+      if (this.timeSinceWordChange >= this.currentWordTime) {
+        this.performWordChange();
       }
     }, UPDATE_RATE);
   }
