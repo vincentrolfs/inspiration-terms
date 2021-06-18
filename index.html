@@ -39,21 +39,10 @@
         }
 
         textColor() {
-            const K = 20;
-
             // Calculate the perceptive luminance (aka luma) - human eye favors green color...
             const luma = ((0.299 * this.r) + (0.587 * this.g) + (0.114 * this.b)) / 255;
 
-            if (!fadeColors) {
-                return luma > 0.5 ? new Rgb(0, 0, 0) : new Rgb(255, 255, 255)
-            }
-
-            // Favor white/black over grey
-            const oppLuma = 1 - luma;
-            const stretched = Math.atan(K * Math.tan((2 * oppLuma - 1) * Math.PI / 2)) / Math.PI + 0.5;
-            const scaled = 255 * stretched
-
-            return new Rgb(scaled, scaled, scaled)
+            return luma > 0.5 ? new Rgb(0, 0, 0) : new Rgb(255, 255, 255)
         }
 
         randomColor() {
@@ -80,7 +69,6 @@
     const delayLow = (parseInt(params.get("delayLow")) || 10);
     const delayHigh = (parseInt(params.get("delayHigh")) || delayLow);
     const fadeWindow = (parseFloat(params.get("fadeWindow")) || 0.1);
-    const fadeColors = null === params.get("noFade");
     const useNormalDistribution = null !== params.get("useNormalDistribution");
 </script>
 
@@ -101,8 +89,6 @@
         }
 
         applyChange(newIndex, newDelay, newColor) {
-            console.log({newIndex, newDelay, newColor: newColor.toString()})
-
             this.currentIndex = newIndex;
             this.currentDelay = newDelay;
             this.timeSinceChange = 0;
@@ -110,8 +96,13 @@
             this.nextColor = newColor;
 
             document.getElementById('word').innerText = terms[this.currentIndex];
+            document.body.style.color = this.currentColor.textColor().toString();
 
-            this.applyInstantColors();
+            console.log({
+                ...this,
+                currentColor: this.currentColor.toString(),
+                nextColor: this.nextColor.toString(),
+            })
         }
 
         computeNewIndex() {
@@ -137,33 +128,19 @@
 
 
         applyFadingColors() {
-            if (!fadeColors) {
-                return;
-            }
-
             if (this.timeSinceChange < (1 - fadeWindow) * this.currentDelay) {
-                return this.applyColors(this.currentColor)
+                return this.applyColor(this.currentColor)
             }
 
             const fadeTimeSoFar = this.timeSinceChange - (1 - fadeWindow) * this.currentDelay;
             const fadeTimeTotal = fadeWindow * this.currentDelay;
+            const effectiveColor = this.currentColor.interpolate(this.nextColor, fadeTimeSoFar / fadeTimeTotal);
 
-            this.applyColors(
-                this.currentColor.interpolate(this.nextColor, fadeTimeSoFar / fadeTimeTotal)
-            )
+            this.applyColor(effectiveColor)
         }
 
-        applyInstantColors() {
-            if (fadeColors) {
-                return;
-            }
-
-            this.applyColors(this.nextColor)
-        }
-
-        applyColors(effectiveColor) {
-            document.getElementById('main').style.backgroundColor = effectiveColor.toString();
-            document.getElementById('word').style.color = effectiveColor.textColor().toString();
+        applyColor(color){
+            document.getElementById('main').style.backgroundColor = color.toString();
         }
 
         run() {
