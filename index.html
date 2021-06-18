@@ -1,168 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8"/>
+  <head>
+    <meta charset="UTF-8" />
     <title>Inspiration terms</title>
-    <link rel="preconnect" href="https://fonts.gstatic.com"/>
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400&display=swap" rel="stylesheet"/>
-    <link href="styles/main.css" rel="stylesheet"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-</head>
-<body>
-<main id="main">
-    <h1 id="word"></h1>
-</main>
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato:wght@400&display=swap"
+      rel="stylesheet"
+    />
+    <link href="styles/main.css" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+  <body>
+    <main id="main">
+      <h1 id="word"></h1>
+    </main>
 
-<script>
-    function randomFloat(min, max) {
-        return Math.random() * (max - min) + min;
-    }
+    <footer>
+      <span
+        >Created by
+        <a href="https://vincentrolfs.github.io/">Vincent Rolfs</a></span
+      >
+    </footer>
 
-    function randomInt(minInclusive, maxExclusive) {
-        return Math.floor(randomFloat(minInclusive, maxExclusive));
-    }
-
-    // https://stackoverflow.com/questions/25582882/javascript-math-random-normal-distribution-gaussian-bell-curve
-    function normalDistribution(){
-        return Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random())
-    }
-
-    class Rgb {
-        constructor(r, g, b) {
-            this.r = r ?? this.randomColor();
-            this.g = g ?? this.randomColor();
-            this.b = b ?? this.randomColor();
-        }
-
-        toString() {
-            return `rgb(${this.r},${this.g},${this.b})`
-        }
-
-        textColor() {
-            // Calculate the perceptive luminance (aka luma) - human eye favors green color...
-            const luma = ((0.299 * this.r) + (0.587 * this.g) + (0.114 * this.b)) / 255;
-
-            return luma > 0.5 ? new Rgb(0, 0, 0) : new Rgb(255, 255, 255)
-        }
-
-        randomColor() {
-            return randomFloat(0, 255)
-        }
-
-        interpolate(otherColor, strength) {
-            strength = Math.max(0, Math.min(1, strength || 0))
-
-            const r = strength * otherColor.r + (1 - strength) * this.r
-            const g = strength * otherColor.g + (1 - strength) * this.g
-            const b = strength * otherColor.b + (1 - strength) * this.b
-
-            return new Rgb(r, g, b)
-        }
-    }
-</script>
-
-<script>
-    const UPDATE_RATE = 50;
-
-    const params = new URL(location.href).searchParams;
-    const terms = (params.get("terms") || "inspiration,terms").split(",");
-    const delayLow = (parseInt(params.get("delayLow")) || 10);
-    const delayHigh = (parseInt(params.get("delayHigh")) || delayLow);
-    const fadeWindow = (parseFloat(params.get("fadeWindow")) || 0.1);
-    const useNormalDistribution = null !== params.get("useNormalDistribution");
-</script>
-
-<script>
-    class Changer {
-        currentIndex;
-        currentDelay;
-        timeSinceChange;
-        currentColor;
-        nextColor;
-
-        performChange() {
-            const newIndex = this.computeNewIndex();
-            const newDelay = this.computeNewDelay();
-            const newColor = new Rgb();
-
-            this.applyChange(newIndex, newDelay, newColor)
-        }
-
-        applyChange(newIndex, newDelay, newColor) {
-            this.currentIndex = newIndex;
-            this.currentDelay = newDelay;
-            this.timeSinceChange = 0;
-            this.currentColor = this.nextColor || new Rgb();
-            this.nextColor = newColor;
-
-            document.getElementById('word').innerText = terms[this.currentIndex];
-            document.body.style.color = this.currentColor.textColor().toString();
-
-            console.log({
-                ...this,
-                currentColor: this.currentColor.toString(),
-                nextColor: this.nextColor.toString(),
-            })
-        }
-
-        computeNewIndex() {
-            let newIndex;
-
-            do {
-                newIndex = randomInt(0, terms.length);
-            } while (newIndex === this.currentIndex || terms.length <= 1);
-
-            return newIndex;
-        }
-
-        computeNewDelay() {
-            if (!useNormalDistribution){
-                return 1000 * Math.abs(randomFloat(delayLow, delayHigh))
-            }
-
-            const stdDv = 1000 * (delayHigh - delayLow) / 2
-            const mean = 1000 * (delayLow + delayHigh) / 2
-
-            return Math.abs(stdDv * normalDistribution() + mean)
-        }
-
-
-        applyFadingColors() {
-            if (this.timeSinceChange < (1 - fadeWindow) * this.currentDelay) {
-                return this.applyColor(this.currentColor)
-            }
-
-            const fadeTimeSoFar = this.timeSinceChange - (1 - fadeWindow) * this.currentDelay;
-            const fadeTimeTotal = fadeWindow * this.currentDelay;
-            const effectiveColor = this.currentColor.interpolate(this.nextColor, fadeTimeSoFar / fadeTimeTotal);
-
-            this.applyColor(effectiveColor)
-        }
-
-        applyColor(color){
-            document.getElementById('main').style.backgroundColor = color.toString();
-        }
-
-        run() {
-            this.performChange();
-
-            setInterval(() => {
-                this.timeSinceChange += UPDATE_RATE;
-
-                this.applyFadingColors();
-
-                if (this.timeSinceChange >= this.currentDelay) {
-                    this.performChange();
-                }
-            }, UPDATE_RATE);
-        }
-    }
-
-    new Changer().run()
-</script>
-
-<footer>
-    <span>Created by <a href="https://vincentrolfs.github.io/">Vincent Rolfs</a></span>
-</footer>
-</body>
+    <script src="scripts/utils.js"></script>
+    <script src="scripts/params.js"></script>
+    <script src="scripts/Changer.js"></script>
+  </body>
 </html>
