@@ -85,10 +85,20 @@ class Changer {
     document.getElementById("main").style.backgroundColor = color.toString();
   }
 
-  applyMovement() {
-    this.currentPos = this.currentPos.move(this.destinationPos, movementSpeed);
+  applyMovement(animationRate) {
+    if (noMovement) {
+      document.getElementById("word").style.position = "unset";
+      document.getElementById("word").style.transform = "none";
+      return;
+    }
 
-    if (this.currentPos.distance(this.destinationPos) <= movementEpsilon) {
+    animationRate = animationRate / 1000; // Convert to seconds
+    this.currentPos = this.currentPos.move(this.destinationPos, animationRate);
+
+    if (
+      this.currentPos.distance(this.destinationPos) <=
+      animationRate * movementEpsilon
+    ) {
       this.destinationPos = new Vector();
     }
 
@@ -97,19 +107,29 @@ class Changer {
   }
 
   run() {
-    this.applyMovement();
     this.performWordChange();
 
-    setInterval(() => {
-      this.timeSinceWordChange += updateRate;
+    let oldAnimationTimestamp;
 
-      this.applyMovement();
+    const step = (animationTimestamp) => {
+      if (oldAnimationTimestamp === undefined) {
+        oldAnimationTimestamp = animationTimestamp;
+      }
+      const animationRate = animationTimestamp - oldAnimationTimestamp;
+      oldAnimationTimestamp = animationTimestamp;
+
+      this.timeSinceWordChange += animationRate;
+      this.applyMovement(animationRate);
       this.applyFadingColors();
 
       if (this.timeSinceWordChange >= this.currentWordTime) {
         this.performWordChange();
       }
-    }, updateRate);
+
+      window.requestAnimationFrame(step);
+    };
+
+    window.requestAnimationFrame(step);
   }
 }
 

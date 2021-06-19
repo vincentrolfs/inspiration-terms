@@ -73,7 +73,7 @@ class Vector {
     return this.connection(anotherVec).norm();
   }
 
-  move(destinationVec) {
+  move(destinationVec, animationRate) {
     const conn = this.connection(destinationVec);
     const connNorm = conn.norm();
 
@@ -81,7 +81,7 @@ class Vector {
       return this;
     }
 
-    const connScaled = conn.mult(movementSpeed / conn.norm());
+    const connScaled = conn.mult((animationRate * movementSpeed) / conn.norm());
 
     return this.add(connScaled);
   }
