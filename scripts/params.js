@@ -1,4 +1,5 @@
-const UPDATE_RATE = 50;
+const WIDTH = window.innerWidth;
+const HEIGHT = window.innerHeight;
 
 const params = new URL(location.href).searchParams;
 
@@ -9,5 +10,11 @@ const fadeWindow = parseFloat(params.get("fadeWindow")) || 0.1;
 const avoidTerms = parseInt(params.get("avoid")) || 1;
 const useNormalDistribution = null !== params.get("useNormalDistribution");
 
-const width = window.innerWidth;
-const height = document.body.innerHeight;
+const updateRate = parseInt(params.get("updateRate")) || 10;
+const movementSpeed =
+  parseInt(params.get("movementSpeed")) ||
+  (Math.min(WIDTH, HEIGHT) * updateRate) / 3500;
+const movementEpsilon =
+  parseInt(params.get("movementEpsilon")) || 1.01 * movementSpeed;
+
+console.log({ movementSpeed, movementEpsilon });

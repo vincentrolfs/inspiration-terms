@@ -5,12 +5,13 @@ class Changer {
   timeSinceWordChange;
   currentColor;
   nextColor;
-  currentPos;
-  nextPos;
+
+  currentPos = new Vector(HEIGHT / 2, WIDTH / 2);
+  destinationPos = new Vector();
 
   performWordChange() {
-    const newWordIndex = this.computenewWordIndex();
-    const newWordTime = this.computenewWordTime();
+    const newWordIndex = this.computeNewWordIndex();
+    const newWordTime = this.computeNewWordTime();
     const newColor = new Rgb();
 
     this.applyChange(newWordIndex, newWordTime, newColor);
@@ -40,7 +41,7 @@ class Changer {
     });
   }
 
-  computenewWordIndex() {
+  computeNewWordIndex() {
     let newWordIndex;
 
     do {
@@ -53,7 +54,7 @@ class Changer {
     return newWordIndex;
   }
 
-  computenewWordTime() {
+  computeNewWordTime() {
     if (!useNormalDistribution) {
       return 1000 * Math.abs(randomFloat(delayLow, delayHigh));
     }
@@ -84,18 +85,31 @@ class Changer {
     document.getElementById("main").style.backgroundColor = color.toString();
   }
 
+  applyMovement() {
+    this.currentPos = this.currentPos.move(this.destinationPos, movementSpeed);
+
+    if (this.currentPos.distance(this.destinationPos) <= movementEpsilon) {
+      this.destinationPos = new Vector();
+    }
+
+    document.getElementById("word").style.top = this.currentPos.top + "px";
+    document.getElementById("word").style.left = this.currentPos.left + "px";
+  }
+
   run() {
+    this.applyMovement();
     this.performWordChange();
 
     setInterval(() => {
-      this.timeSinceWordChange += UPDATE_RATE;
+      this.timeSinceWordChange += updateRate;
 
+      this.applyMovement();
       this.applyFadingColors();
 
       if (this.timeSinceWordChange >= this.currentWordTime) {
         this.performWordChange();
       }
-    }, UPDATE_RATE);
+    }, updateRate);
   }
 }
 

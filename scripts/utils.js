@@ -46,3 +46,43 @@ class Rgb {
     return new Rgb(r, g, b);
   }
 }
+
+class Vector {
+  constructor(top, left) {
+    this.top = top ?? randomFloat(0, HEIGHT);
+    this.left = left ?? randomFloat(0, WIDTH);
+  }
+
+  norm() {
+    return Math.sqrt(this.top ** 2 + this.left ** 2);
+  }
+
+  mult(float) {
+    return new Vector(this.top * float, this.left * float);
+  }
+
+  add(anotherVec) {
+    return new Vector(this.top + anotherVec.top, this.left + anotherVec.left);
+  }
+
+  connection(anotherVec) {
+    return new Vector(anotherVec.top - this.top, anotherVec.left - this.left);
+  }
+
+  distance(anotherVec) {
+    return this.connection(anotherVec).norm();
+  }
+
+  move(destinationVec) {
+    const conn = this.connection(destinationVec);
+    const connNorm = conn.norm();
+
+    if (connNorm === 0) {
+      return this;
+    }
+
+    const connScaled = conn.mult(movementSpeed / conn.norm());
+
+    return this.add(connScaled);
+  }
+}
