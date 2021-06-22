@@ -12,6 +12,6 @@ const useNormalDistribution = null !== params.get("useNormalDistribution");
 const noMovement = null !== params.get("noMovement");
 
 const movementSpeed =
-  parseInt(params.get("movementSpeed")) || Math.min(WIDTH, HEIGHT) / 3.5; // In px / seconds
+  Math.min(WIDTH, HEIGHT) / (parseFloat(params.get("movementSlowdown")) || 5); // In px / seconds
 const movementEpsilon =
-  parseInt(params.get("movementEpsilon")) || 1.01 * movementSpeed;
+  parseFloat(params.get("movementEpsilon")) || 1.01 * movementSpeed;
